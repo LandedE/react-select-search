@@ -49,6 +49,7 @@ var propTypes = {
     onMount: _propTypes2.default.func.isRequired,
     onBlur: _propTypes2.default.func.isRequired,
     onFocus: _propTypes2.default.func.isRequired,
+    onKeyUp: _propTypes2.default.func.isRequired,
     renderOption: _propTypes2.default.func.isRequired,
     value: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.array])
 };
@@ -62,6 +63,7 @@ var defaultProps = {
     multiple: false,
     height: 200,
     name: null,
+    onKeyUp: function onKeyUp() {},
     onHighlight: function onHighlight() {},
     onMount: function onMount() {},
     onBlur: function onBlur() {},
@@ -148,11 +150,13 @@ var Component = function (_React$Component) {
 
     }, {
         key: 'componentWillMount',
-        value: function componentWillMount() {}
+        value: function componentWillMount() {
+        }
     }, {
         key: 'componentWillReceiveProps',
         value: function componentWillReceiveProps(nextProps) {
-            if (nextProps.options) {
+          //component will receive props is culprit
+            if (nextProps.options.length !== this.props.options.length) {
                 this.setState({
                     options: nextProps.options,
                     defaultOptions: nextProps.options
@@ -176,6 +180,19 @@ var Component = function (_React$Component) {
         key: 'componentDidUpdate',
         value: function componentDidUpdate(prevProps, prevState) {
             /* Fire callbacks */
+
+            if(this.state.search !== prevState.search){
+              // var options = this.state.defaultOptions;
+              // options = this.getNewOptionsList(options, this.state.search);
+              //
+              // console.log("options in update: ", options);
+              // // this.placeSelectedFirst(options);
+              //
+              // this.setState({ search: this.state.search, options: options }, ()=>{
+              //   this.props.onKeyUp.call(null, this.publishOption(this.state.value), this.state, this.props);
+              // });
+              return;
+            }
             if (this.state.focus && this.state.focus != prevState.focus) {
                 this.handleFocus();
                 this.props.onFocus.call(null, this.publishOption(), this.state, this.props);
@@ -208,8 +225,7 @@ var Component = function (_React$Component) {
             if (this.props.search && !this.props.multiple) {
                 this.refs.search.blur();
             }
-
-            var search = '';
+            var search = this.state.search;
 
             if (this.state.value && this.props.search && !this.props.multiple) {
                 var option = this.findByValue(null, this.state.value);
@@ -237,7 +253,10 @@ var Component = function (_React$Component) {
 
             this.placeSelectedFirst(options);
 
-            this.setState({ search: value, options: options });
+            this.setState({ search: value, options: options, focus: this.props.multiple }, ()=>{
+              this.props.onKeyUp.call(null, this.publishOption(this.state.value), this.state, this.props);
+              // .call(null, this.state.value, this.state, this.props);
+            });
         }
     }, {
         key: 'onKeyPress',
@@ -254,6 +273,7 @@ var Component = function (_React$Component) {
     }, {
         key: 'onKeyDown',
         value: function onKeyDown(e) {
+
             if (!this.state.focus) {
                 return;
             }
@@ -276,7 +296,9 @@ var Component = function (_React$Component) {
     }, {
         key: 'onKeyUp',
         value: function onKeyUp(e) {
+          // this.props.onKeyUp.call(null, this.publishOption(this.state.value), this.state, this.props);
             /** Esc */
+
             if (e.keyCode === 27) {
                 this.handleEsc();
             }
@@ -507,7 +529,6 @@ var Component = function (_React$Component) {
             this.placeSelectedFirst(options, option.value);
 
             this.setState({ value: currentValue, search: search, options: options, highlighted: highlighted, focus: this.props.multiple });
-
             setTimeout(function () {
                 _this3.props.onChange.call(null, _this3.publishOption(currentValue), _this3.state, _this3.props);
             }, 50);
