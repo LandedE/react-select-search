@@ -18,6 +18,7 @@ const propTypes    = {
     onHighlight    : PropTypes.func.isRequired,
     onMount        : PropTypes.func.isRequired,
     onBlur         : PropTypes.func.isRequired,
+    onKeyUp        : Proptypes.func.isRequired,
     onFocus        : PropTypes.func.isRequired,
     renderOption   : PropTypes.func.isRequired,
     value          : PropTypes.oneOfType([
@@ -35,6 +36,7 @@ const defaultProps = {
     multiple       : false,
     height         : 200,
     name           : null,
+    onKeyUp        : function () {},
     onHighlight    : function () {},
     onMount        : function () {},
     onBlur         : function () {},
@@ -117,12 +119,12 @@ class Component extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.options) {
-            this.setState({
-                options: nextProps.options,
-                defaultOptions: nextProps.options
-            })
-        }
+      if (nextProps.options.length !== this.props.options.length) {
+          this.setState({
+              options: nextProps.options,
+              defaultOptions: nextProps.options
+          });
+      }
     }
 
     componentDidMount() {
@@ -138,6 +140,9 @@ class Component extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         /* Fire callbacks */
+        if(this.state.search !== prevState.search){
+          return;
+        }
         if (this.state.focus && this.state.focus != prevState.focus) {
             this.handleFocus();
             this.props.onFocus.call(null, this.publishOption(), this.state, this.props);
@@ -167,7 +172,7 @@ class Component extends React.Component {
             this.refs.search.blur();
         }
 
-        let search = '';
+        let search = this.state.search;
 
         if (this.state.value && this.props.search && !this.props.multiple) {
             let option = this.findByValue(null, this.state.value);
@@ -178,7 +183,7 @@ class Component extends React.Component {
     }
 
     onFocus() {
-        this.setState({focus: true, options: this.state.defaultOptions, search: ''});
+        this.setState({focus: true, options: this.state.defaultOptions, search: search});
     }
 
     onChange(e) {
@@ -193,7 +198,9 @@ class Component extends React.Component {
 
         this.placeSelectedFirst(options);
 
-        this.setState({search: value, options: options});
+        this.setState({ search: value, options: options, focus: this.props.multiple }, ()=>{
+          this.props.onKeyUp.call(null, this.publishOption(this.state.value), this.state, this.props);
+        });
     }
 
     onKeyPress(e) {
