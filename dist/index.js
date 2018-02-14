@@ -253,10 +253,10 @@ var Component = function (_React$Component) {
 
             this.placeSelectedFirst(options);
 
-            this.setState({ search: value, options: options, focus: this.props.multiple }, ()=>{
+            this.setState({ search: value, options: options, focus: this.props.multiple }, function(){
               this.props.onKeyUp.call(null, this.publishOption(this.state.value), this.state, this.props);
               // .call(null, this.state.value, this.state, this.props);
-            });
+            }.bind(this));
         }
     }, {
         key: 'onKeyPress',
